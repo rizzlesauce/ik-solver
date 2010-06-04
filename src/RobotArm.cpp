@@ -32,9 +32,17 @@ void RobotArm::calculateEndPoint(VECTOR3D *beginPoint) {
 	VECTOR3D_Add(beginPoint, &endPoint, &endPoint);
 }
 
+void RobotArm::removeNextSegment() {
+	if (nextArm != NULL) {
+		delete nextArm;
+		nextArm = NULL;
+	}
+}
+
 RobotArm::~RobotArm() {
 	// TODO Auto-generated destructor stub
 	if (nextArm != NULL) {
 		delete nextArm;
+		nextArm = NULL;
 	}
 }

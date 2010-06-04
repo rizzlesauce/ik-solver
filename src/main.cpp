@@ -722,6 +722,22 @@ void main_loop_function()
 		if (key[SDLK_t]) {
 			draw_triangles = !draw_triangles;
 		}
+		if (key[SDLK_m]) {
+			RobotArm *arm = firstArmSegment;
+			while (arm->hasNextArm()) {
+				arm = arm->getNextArm();
+			}
+
+			arm->setNextArm(new RobotArm(RAND_RANGE_FLOAT(0.5, 2.0, 1000), 0.0));
+		}
+		if (key[SDLK_n]) {
+			RobotArm *arm = firstArmSegment;
+			while (arm->hasNextArm() && arm->getNextArm()->hasNextArm()) {
+				arm = arm->getNextArm();
+			}
+
+			arm->removeNextSegment();
+		}
 		delete perspectified;
 	}
 }

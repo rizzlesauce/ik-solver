@@ -57,6 +57,7 @@
 #define RAD_TO_DEG(rads) ((rads)*180.0/PI)
 
 #define RAND_RANGE(x,y) ( (x) + (rand()%((y)-(x)+1)))
+#define RAND_RANGE_FLOAT(x,y,p) ( ((float)x) + ((((float)((rand())%(p)))/((float)p))*(((float)y)-((float)x))) )
 
 // TYPES //////////////////////////////////////////////////
 

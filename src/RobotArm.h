@@ -19,8 +19,10 @@ public:
 
 	RobotArm *getNextArm();
 	void setNextArm(RobotArm *arm);
+	void insertNextArm(RobotArm *arm);
 	bool hasNextArm();
 	void calculateEndPoint(VECTOR3D *beginPoint);
+	void removeNextSegment();
 
 	float rotation;
 	float length;
