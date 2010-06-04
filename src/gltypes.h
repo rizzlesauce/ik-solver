@@ -16,4 +16,8 @@ typedef struct TEXTURED_VERTEX_DATA_3D_TYPE {
 	GLfloat texCoord[2];
 } TEXTURED_VERTEX_DATA_3D, *TEXTURED_VERTEX_DATA_3D_PTR;
 
+typedef struct VERTEX_DATA_3D_TYPE {
+	GLfloat vertex[3];
+	GLfloat normal[3];
+} VERTEX_DATA_3D, *VERTEX_DATA_3D_PTR;
 #endif /* GLTYPES_H_ */

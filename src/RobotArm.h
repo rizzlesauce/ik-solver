@@ -9,16 +9,23 @@
 #define ROBOTARM_H_
 
 #include <cstring>
+#include <cmath>
 #include "matrixmath.h"
 
 class RobotArm {
 public:
-	RobotArm();
+	RobotArm(float, float, RobotArm *p_nextSegment = NULL);
 	virtual ~RobotArm();
 
 	RobotArm *getNextArm();
 	void setNextArm(RobotArm *arm);
 	bool hasNextArm();
+	void calculateEndPoint(VECTOR3D *beginPoint);
+
+	float rotation;
+	float length;
+
+	POINT3D endPoint;
 
 protected:
 	RobotArm *nextArm;

@@ -17,10 +17,10 @@
 #include "Debugger.h"
 #include "Utils.h"
 #include "matrixmath.h"
-#include "dharmacube.h"
-#include "floor.h"
 #include "RobotArm.h"
 #include "RobotArmTarget.h"
+#include "sphere.h"
+#include "cylinder.h"
 
 using namespace std;
 
@@ -34,10 +34,11 @@ Uint8 *bird_buffer = NULL;
 Uint8 *bird_position = NULL;
 Uint32 bird_length = 0;
 
+RobotArm *firstArmSegment = NULL;
 RobotArmTarget target;
+float joint_size = 0.2f;
 
 GLuint texture;
-GLuint floor_texture;
 
 int mouse_x = 0;
 int mouse_y = 0;
@@ -59,7 +60,7 @@ string modelFiles[] = { //"apple.dat",
 int numModels = 3;
 int currentModelIndex = 1;
 
-VECTOR3D light_pos = {-10.0f, 10.0f, 10.0f };
+POINT4D light_pos = {-10.0f, 10.0f, 10.0f, 0.0f };
 //POINT3D light_pos = {0.0f, 1.0f, 5.0f};
 POINT4D relative_light_pos;
 RzColor3f light_color;
@@ -367,7 +368,14 @@ void main_loop_function()
 	specular_highlight.setBlue(1.0f);
 
 	VECTOR3D_INITXYZ(&target.position, 10, 10, 10);
-	target.size = 0.01;
+	target.size = 0.1;
+
+	// set up the arm
+	firstArmSegment = new RobotArm(2.0f, 20.0f,
+			new RobotArm(1.0f, 45.0f,
+					new RobotArm(0.5f, -20.0f)
+			)
+	);
 
 	while(events())
 	{
@@ -380,65 +388,70 @@ void main_loop_function()
 				camera_target.x, camera_target.y, camera_target.z,
 				camera_up.x, camera_up.y, camera_up.z);
 
+//		// figure out the z-buffer value at the origin
+//		POINT4D rasterPosition;
+//		glRasterPos3f(0, 0, 0);
+//		glGetFloatv(GL_CURRENT_RASTER_POSITION, rasterPosition.M);
+
 		GLdouble model[16];
 		GLdouble proj[16];
 		GLint view[4];
-		GLdouble objX, objY, objZ;
+		GLdouble x1, y1, z1, x2, y2, z2;
+
 		glGetDoublev(GL_MODELVIEW_MATRIX, model);
 		glGetDoublev(GL_PROJECTION_MATRIX, proj);
 		glGetIntegerv(GL_VIEWPORT, view);
 
-		float zRange = far_z - near_z;
-		float zDepthRange = 1.0;
-		float dist_from_near = camera_position.z - near_z;
-		float screen_z = dist_from_near / zRange;
-
-		gluUnProject(mouse_x, WINDOW_HEIGHT - mouse_y, 0.01,
+		gluUnProject(mouse_x, WINDOW_HEIGHT - mouse_y, 0,
 				model, proj, view,
-				&objX, &objY, &objZ
+				&x1, &y1, &z1
 				);
-		target.position.x = objX;
-		target.position.y = objY;
-		target.position.z = objZ;
+		gluUnProject(mouse_x, WINDOW_HEIGHT - mouse_y, 1.0,
+				model, proj, view,
+				&x2, &y2, &z2
+				);
+
+		// figure out where the line intersects the x-y plane
+		float xz_slope = (x2 - x1) / (z2 - z1);
+		float x_intercept = x1 - xz_slope * z1;
+
+		float yz_slope = (y2 - y1) / (z2 - z1);
+		float y_intercept = y1 - yz_slope * z1;
+
+		target.position.x = x_intercept;
+		target.position.y = y_intercept;
+		target.position.z = 0;
 
 		// draw target
-		glBegin(GL_QUADS);
+		/*
 		glColor3f(1.0, 0.0, 0.0);
+		glBegin(GL_QUADS);
 		float sizeDiv2 = target.size / 2.0;
 		glVertex3f(target.position.x - sizeDiv2, target.position.y + sizeDiv2, target.position.z);
 		glVertex3f(target.position.x + sizeDiv2, target.position.y + sizeDiv2, target.position.z);
 		glVertex3f(target.position.x + sizeDiv2, target.position.y - sizeDiv2, target.position.z);
 		glVertex3f(target.position.x - sizeDiv2, target.position.y - sizeDiv2, target.position.z);
-		/*
-		glVertex3f(target.position.x - sizeDiv2, target.position.y + sizeDiv2, 0);
-		glVertex3f(target.position.x + sizeDiv2, target.position.y + sizeDiv2, 0);
-		glVertex3f(target.position.x + sizeDiv2, target.position.y - sizeDiv2, 0);
-		glVertex3f(target.position.x - sizeDiv2, target.position.y - sizeDiv2, 0);
+		glEnd();
 		*/
+		glPushMatrix();
+		glTranslatef(target.position.x, target.position.y, target.position.z);
+		glScalef(joint_size, joint_size, joint_size);
+
+		glColor3f(1.0, 0.0, 0.0);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
+		glVertexPointer(3, GL_FLOAT, sizeof(VERTEX_DATA_3D), &sphereVertexData[0].vertex);
+		glNormalPointer(GL_FLOAT, sizeof(VERTEX_DATA_3D), &sphereVertexData[0].normal);
+		glDrawArrays(GL_TRIANGLES, 0, sphereNumberOfVertices);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glDisableClientState(GL_NORMAL_ARRAY);
+
+		glPopMatrix();
+
 		/*
 		ss.clear();
 		ss << "target.position.z: " << target.position.z << endl;
 		Debugger::getInstance().print(ss.str());
-		*/
-
-		glEnd();
-
-		/*
-		glPushMatrix();
-		glTranslatef(0.0, -1.0, 0.0);
-		glBindTexture(GL_TEXTURE_2D, floor_texture);
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnableClientState(GL_NORMAL_ARRAY);
-		glVertexPointer(3, GL_FLOAT, sizeof(TEXTURED_VERTEX_DATA_3D), &floorVertexData[0].vertex);
-		glNormalPointer(GL_FLOAT, sizeof(TEXTURED_VERTEX_DATA_3D), &floorVertexData[0].normal);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(TEXTURED_VERTEX_DATA_3D), &floorVertexData[0].texCoord);
-		//glColor3f(0.0, 0.0, 1.0);
-		glDrawArrays(GL_TRIANGLES, 0, floorNumberOfVertices);
-		glDisableClientState(GL_VERTEX_ARRAY);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glDisableClientState(GL_NORMAL_ARRAY);
-		glPopMatrix();
 		*/
 
 		Uint32 ticks = SDL_GetTicks();
@@ -450,22 +463,68 @@ void main_loop_function()
 			}
 		}
 
-		glPushMatrix();
-		glRotatef(cube_rotation, 0.0, 1.0, 0.0);
+		// draw the arm segments
+		RobotArm *arm_pointer = firstArmSegment;
+		POINT3D lastPoint = { 0, 0, 0 };
 
-		// draw the dharma cube
-		glBindTexture(GL_TEXTURE_2D, texture);
+		while (arm_pointer != NULL) {
+
+			// draw a joint
+			glPushMatrix();
+			glTranslatef(lastPoint.x, lastPoint.y, lastPoint.z);
+			glScalef(joint_size, joint_size, joint_size);
+
+			glColor3f(0.0, 1.0, 0.0);
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glEnableClientState(GL_NORMAL_ARRAY);
+			glVertexPointer(3, GL_FLOAT, sizeof(VERTEX_DATA_3D), &sphereVertexData[0].vertex);
+			glNormalPointer(GL_FLOAT, sizeof(VERTEX_DATA_3D), &sphereVertexData[0].normal);
+			glDrawArrays(GL_TRIANGLES, 0, sphereNumberOfVertices);
+			glDisableClientState(GL_VERTEX_ARRAY);
+			glDisableClientState(GL_NORMAL_ARRAY);
+
+			glPopMatrix();
+
+			// draw the arm segment
+			glPushMatrix();
+			glTranslatef(lastPoint.x, lastPoint.y, lastPoint.z);
+			glRotatef(arm_pointer->rotation, 0.0, 0.0, 1.0);
+
+			glRotatef(90, 0.0, 1.0, 0.0);
+			glScalef(0.1, 0.1, arm_pointer->length / 2.0);
+			glTranslatef(0.0, 0.0, 1.0);
+
+			glColor3f(0.8, 0.8, 0.8);
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glEnableClientState(GL_NORMAL_ARRAY);
+			glVertexPointer(3, GL_FLOAT, sizeof(VERTEX_DATA_3D), &cylinderVertexData[0].vertex);
+			glNormalPointer(GL_FLOAT, sizeof(VERTEX_DATA_3D), &cylinderVertexData[0].normal);
+			glDrawArrays(GL_TRIANGLES, 0, cylinderNumberOfVertices);
+			glDisableClientState(GL_VERTEX_ARRAY);
+			glDisableClientState(GL_NORMAL_ARRAY);
+
+			glPopMatrix();
+
+			// figure out position
+			arm_pointer->calculateEndPoint(&lastPoint);
+			VECTOR3D_COPY(&lastPoint, &arm_pointer->endPoint);
+
+			arm_pointer = arm_pointer->getNextArm();
+		}
+		// draw the grabber
+		glPushMatrix();
+		glTranslatef(lastPoint.x, lastPoint.y, lastPoint.z);
+		glScalef(joint_size, joint_size, joint_size);
+
+		glColor3f(0.0, 0.0, 1.0);
 		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glEnableClientState(GL_NORMAL_ARRAY);
-		glVertexPointer(3, GL_FLOAT, sizeof(TEXTURED_VERTEX_DATA_3D), &dharmaCubeVertexData[0].vertex);
-		glNormalPointer(GL_FLOAT, sizeof(TEXTURED_VERTEX_DATA_3D), &dharmaCubeVertexData[0].normal);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(TEXTURED_VERTEX_DATA_3D), &dharmaCubeVertexData[0].texCoord);
-		//glColor3f(0.0, 0.0, 1.0);
-		glDrawArrays(GL_TRIANGLES, 0, dharmaCubeNumberOfVertices);
+		glVertexPointer(3, GL_FLOAT, sizeof(VERTEX_DATA_3D), &sphereVertexData[0].vertex);
+		glNormalPointer(GL_FLOAT, sizeof(VERTEX_DATA_3D), &sphereVertexData[0].normal);
+		glDrawArrays(GL_TRIANGLES, 0, sphereNumberOfVertices);
 		glDisableClientState(GL_VERTEX_ARRAY);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		glDisableClientState(GL_NORMAL_ARRAY);
+
 		glPopMatrix();
 
 		//glRotatef(rotation, 0, 1, 0);
@@ -680,42 +739,19 @@ void GL_Setup(int width, int height)
 	*/
 
 	//Load Bitmap
-	SDL_Surface* bmpFile = SDL_LoadBMP("data/dharmacube.bmp");
-	SDL_Surface* floorBmp = SDL_LoadBMP("data/wood-floor.bmp");
 
 	/* Standard OpenGL texture creation code */
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-
 	// select modulate to mix texture with color for shading
-    //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	if (gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, bmpFile->w,
-			bmpFile->h, GL_BGR_EXT,
-			GL_UNSIGNED_BYTE, bmpFile->pixels) != 0) {
-		throw "error building mipmaps";
-	}
-	//Free surface after using it
-	SDL_FreeSurface(bmpFile);
-
-	glGenTextures(1, &floor_texture);
-	glBindTexture(GL_TEXTURE_2D, floor_texture);
-
-	if (gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, floorBmp->w,
-			floorBmp->h, GL_BGR_EXT,
-			GL_UNSIGNED_BYTE, floorBmp->pixels) != 0) {
-		throw "error building mipmaps";
-	}
-	SDL_FreeSurface(floorBmp);
 
 	//change the texture matrix to flip and mirror
 	glMatrixMode(GL_TEXTURE);
@@ -724,7 +760,17 @@ void GL_Setup(int width, int height)
 
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
-	//glDisable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_COLOR_MATERIAL);
+	glLightfv(GL_LIGHT0, GL_POSITION, light_pos.M);
+
+    GLfloat mat_specular[] = { 0, 0, 0, 1.0 };
+    GLfloat mat_shininess[] = { 128 };
+    //glShadeModel(GL_SMOOTH);
+
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
 
 	glClearColor(0.3, 0.3, 1.0, 0.0);
 
@@ -888,9 +934,11 @@ int main(int argc, char *argv[]) {
 	if (hardware_spec != NULL) {
 		free(hardware_spec);
 	}
+	if (firstArmSegment != NULL) {
+		delete firstArmSegment;
+	}
 
 	glDeleteTextures(1, &texture);
-	glDeleteTextures(1, &floor_texture);
 
 	return 0;
 }
