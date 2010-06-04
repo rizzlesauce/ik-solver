@@ -1,0 +1,17 @@
+.cproject
+.project
+Debug
+*.wav
+*.dat
+*.tga
+*.fbx
+*.xcf
+*.dae
+*.blend
+*.blend1
+*.jpg
+*.bmp
+Release
+messages.log
+*~
+*.swp
