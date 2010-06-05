@@ -21,7 +21,7 @@ public:
 	void setNextArm(RobotArm *arm);
 	void insertNextArm(RobotArm *arm);
 	bool hasNextArm();
-	void calculateEndPoint(VECTOR3D *beginPoint);
+	void calculateEndPoint(VECTOR3D *beginPoint, float last_rotation);
 	void removeNextSegment();
 
 	float rotation;

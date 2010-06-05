@@ -25,9 +25,9 @@ bool RobotArm::hasNextArm() {
 	return nextArm != NULL;
 }
 
-void RobotArm::calculateEndPoint(VECTOR3D *beginPoint) {
-	endPoint.x = length * cos(DEG_TO_RAD(rotation));
-	endPoint.y = length * sin(DEG_TO_RAD(rotation));
+void RobotArm::calculateEndPoint(VECTOR3D *beginPoint, float last_rotation) {
+	endPoint.x = length * cos(DEG_TO_RAD(last_rotation + rotation));
+	endPoint.y = length * sin(DEG_TO_RAD(last_rotation + rotation));
 
 	VECTOR3D_Add(beginPoint, &endPoint, &endPoint);
 }

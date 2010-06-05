@@ -21,6 +21,8 @@
 #include "RobotArmTarget.h"
 #include "sphere.h"
 #include "cylinder.h"
+#include "RzMatrix.h"
+#include "RzVector.h"
 
 using namespace std;
 
@@ -373,7 +375,7 @@ void main_loop_function()
 	// set up the arm
 	firstArmSegment = new RobotArm(2.0f, 20.0f,
 			new RobotArm(1.0f, 45.0f,
-					new RobotArm(0.5f, -20.0f)
+					new RobotArm(0.7f, -20.0f)
 			)
 	);
 
@@ -466,8 +468,11 @@ void main_loop_function()
 		// draw the arm segments
 		RobotArm *arm_pointer = firstArmSegment;
 		POINT3D lastPoint = { 0, 0, 0 };
+		float lastAngle = 0.0;
+		int numSegments = 0;
 
 		while (arm_pointer != NULL) {
+			++numSegments;
 
 			// draw a joint
 			glPushMatrix();
@@ -488,7 +493,7 @@ void main_loop_function()
 			// draw the arm segment
 			glPushMatrix();
 			glTranslatef(lastPoint.x, lastPoint.y, lastPoint.z);
-			glRotatef(arm_pointer->rotation, 0.0, 0.0, 1.0);
+			glRotatef(lastAngle + arm_pointer->rotation, 0.0, 0.0, 1.0);
 
 			glRotatef(90, 0.0, 1.0, 0.0);
 			glScalef(0.1, 0.1, arm_pointer->length / 2.0);
@@ -506,8 +511,9 @@ void main_loop_function()
 			glPopMatrix();
 
 			// figure out position
-			arm_pointer->calculateEndPoint(&lastPoint);
+			arm_pointer->calculateEndPoint(&lastPoint, lastAngle);
 			VECTOR3D_COPY(&lastPoint, &arm_pointer->endPoint);
+			lastAngle = lastAngle + arm_pointer->rotation;
 
 			arm_pointer = arm_pointer->getNextArm();
 		}
@@ -526,6 +532,69 @@ void main_loop_function()
 		glDisableClientState(GL_NORMAL_ARRAY);
 
 		glPopMatrix();
+
+		// move the arm in order to get to the target
+		VECTOR3D targetVector = VECTOR3D_Sub(&target.position, &lastPoint);
+		float distance = VECTOR3D_Length(&targetVector);
+		VECTOR3D_Normalize(&targetVector);
+		VECTOR3D_Scale(max(distance, 0.3f) / numSegments, &targetVector);
+
+		/*
+		POINT3D normalEndPoint = VECTOR3D_Add(&lastPoint, &targetVector);
+		glBegin(GL_LINES);
+		glColor3f(0.0, 0.0, 0.0);
+		glVertex3f(lastPoint.x, lastPoint.y, lastPoint.z);
+		glVertex3f(normalEndPoint.x, normalEndPoint.y, normalEndPoint.z);
+		glEnd();
+		*/
+
+		VECTOR3D lastBegin = {0, 0, 0};
+		arm_pointer = firstArmSegment;
+		RzMatrix jacobian(numSegments, 2);
+		int i = 0;
+
+		while (arm_pointer != NULL) {
+			VECTOR3D effectorVector = VECTOR3D_Sub(&lastPoint, &lastBegin);
+
+			//VECTOR3D axisOfRotation = {lastBegin.x, lastBegin.y, 1.0f};
+			VECTOR3D axisOfRotation = {0, 0, 1};
+			VECTOR3D entry = VECTOR3D_Cross(&axisOfRotation, &effectorVector);
+
+			jacobian.setCellValue(i, 0, entry.x);
+			jacobian.setCellValue(i, 1, entry.y);
+
+			/*
+			VECTOR3D endPoint = VECTOR3D_Add(&lastBegin, &entry);
+
+			glBegin(GL_LINES);
+			glColor3f(0.0, 1.0, 0.0);
+			glVertex3f(lastBegin.x, lastBegin.y, lastBegin.z);
+			glVertex3f(endPoint.x, endPoint.y, endPoint.z);
+			glEnd();
+			*/
+
+			VECTOR3D_COPY(&lastBegin, &arm_pointer->endPoint);
+			arm_pointer = arm_pointer->getNextArm();
+			++i;
+		}
+
+		RzVector rzVector(2);
+		rzVector.setItemValue(0, targetVector.x);
+		rzVector.setItemValue(1, targetVector.y);
+
+		RzVector changes = jacobian.multiplyVectorToStack(rzVector);
+		//Debugger::getInstance().print(changes.toString() + "\n");
+
+		if (distance > 0.1) {
+			i = 0;
+			arm_pointer = firstArmSegment;
+			while (arm_pointer != NULL) {
+				//arm_pointer->rotation += distance * 0.01 / changes.itemValue(i);
+				arm_pointer->rotation += changes.itemValue(i);
+				arm_pointer = arm_pointer->getNextArm();
+				++i;
+			}
+		}
 
 		//glRotatef(rotation, 0, 1, 0);
 		//glBegin(GL_POINTS);
