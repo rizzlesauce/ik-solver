@@ -46,6 +46,7 @@ int mouse_x = 0;
 int mouse_y = 0;
 
 int quitButton = 0;
+bool calculate_target = false;
 
 // Keydown booleans
 bool key[321];
@@ -166,10 +167,11 @@ bool events() {
 		    Debugger::getInstance().print("hat motion: " + Utils::getInstance().itos(event.jhat.value));
 		    */
 		    break;
-		case SDL_MOUSEMOTION:
+		case SDL_MOUSEBUTTONUP:
 			// convert mouse coordinates to camera space
-			mouse_x = event.motion.x;
-			mouse_y = event.motion.y;
+			mouse_x = event.button.x;
+			mouse_y = event.button.y;
+			calculate_target = true;
 
 			/*
 			GLdouble model[16];
@@ -395,36 +397,40 @@ void main_loop_function()
 //		glRasterPos3f(0, 0, 0);
 //		glGetFloatv(GL_CURRENT_RASTER_POSITION, rasterPosition.M);
 
-		GLdouble model[16];
-		GLdouble proj[16];
-		GLint view[4];
-		GLdouble x1, y1, z1, x2, y2, z2;
+		if (calculate_target) {
+			GLdouble model[16];
+			GLdouble proj[16];
+			GLint view[4];
+			GLdouble x1, y1, z1, x2, y2, z2;
 
-		glGetDoublev(GL_MODELVIEW_MATRIX, model);
-		glGetDoublev(GL_PROJECTION_MATRIX, proj);
-		glGetIntegerv(GL_VIEWPORT, view);
+			glGetDoublev(GL_MODELVIEW_MATRIX, model);
+			glGetDoublev(GL_PROJECTION_MATRIX, proj);
+			glGetIntegerv(GL_VIEWPORT, view);
 
-		gluUnProject(mouse_x, WINDOW_HEIGHT - mouse_y, 0,
-				model, proj, view,
-				&x1, &y1, &z1
-				);
-		gluUnProject(mouse_x, WINDOW_HEIGHT - mouse_y, 1.0,
-				model, proj, view,
-				&x2, &y2, &z2
-				);
+			gluUnProject(mouse_x, WINDOW_HEIGHT - mouse_y, 0,
+					model, proj, view,
+					&x1, &y1, &z1
+					);
+			gluUnProject(mouse_x, WINDOW_HEIGHT - mouse_y, 1.0,
+					model, proj, view,
+					&x2, &y2, &z2
+					);
 
-		// figure out where the line intersects the x-y plane
-		float xz_slope = (x2 - x1) / (z2 - z1);
-		float x_intercept = x1 - xz_slope * z1;
+			// figure out where the line intersects the x-y plane
+			float xz_slope = (x2 - x1) / (z2 - z1);
+			float x_intercept = x1 - xz_slope * z1;
 
-		float yz_slope = (y2 - y1) / (z2 - z1);
-		float y_intercept = y1 - yz_slope * z1;
+			float yz_slope = (y2 - y1) / (z2 - z1);
+			float y_intercept = y1 - yz_slope * z1;
 
-		target.position.x = x_intercept;
-		target.position.y = y_intercept;
-		target.position.z = 0;
+			target.position.x = x_intercept;
+			target.position.y = y_intercept;
+			target.position.z = 0;
 
-		// draw target
+			calculate_target = false;
+		}
+
+			// draw target
 		/*
 		glColor3f(1.0, 0.0, 0.0);
 		glBegin(GL_QUADS);
