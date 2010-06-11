@@ -359,18 +359,6 @@ void main_loop_function()
 
 	//int mycount = RAND_RANGE(0, 30);
 
-	light_color.setRed(1.0f);
-	light_color.setGreen(1.0f);
-	light_color.setBlue(1.0f);
-
-	ambient_light.setRed(0.4f);
-	ambient_light.setGreen(0.4f);
-	ambient_light.setBlue(0.5f);
-
-	specular_highlight.setRed(1.0f);
-	specular_highlight.setGreen(1.0f);
-	specular_highlight.setBlue(1.0f);
-
 	VECTOR3D_INITXYZ(&target.position, 10, 10, 10);
 	target.size = 0.1;
 
@@ -852,18 +840,46 @@ void GL_Setup(int width, int height)
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
 	glEnable(GL_COLOR_MATERIAL);
+	glEnable(GL_LIGHT0);
+
+	light_color.setRed(1.0f);
+	light_color.setGreen(1.0f);
+	light_color.setBlue(1.0f);
+
+	ambient_light.setRed(0.0f);
+	ambient_light.setGreen(0.0f);
+	ambient_light.setBlue(0.0f);
+
+	specular_highlight.setRed(1.0f);
+	specular_highlight.setGreen(1.0f);
+	specular_highlight.setBlue(1.0f);
+
+	GLfloat main_light_color[] = {light_color.getRed(), light_color.getGreen(), light_color.getBlue(), 1.0f};
+	GLfloat main_ambient_light[] = {ambient_light.getRed(), ambient_light.getGreen(), ambient_light.getBlue(), 1.0f};
+	GLfloat main_specular_highlight[] = {specular_highlight.getRed(), specular_highlight.getGreen(), specular_highlight.getBlue(), 1.0f};
+
 	glLightfv(GL_LIGHT0, GL_POSITION, light_pos.M);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, main_light_color);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, main_ambient_light);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, main_specular_highlight);
 
-    GLfloat mat_specular[] = { 0, 0, 0, 1.0 };
-    GLfloat mat_shininess[] = { 128 };
-    //glShadeModel(GL_SMOOTH);
+	glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+	//glColorMaterial(GL_FRONT, GL_DIFFUSE);
 
-    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+    //GLfloat material_ambient[] = {0.0f, 0.0f, 0.0f, 1.0f};
+    //glMaterialfv(GL_FRONT, GL_AMBIENT, material_ambient);
+
+    //GLfloat material_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	//GLfloat material_specular[] = { 0.2f, 0.2f, 0.2f, 0.2f };
+	//glMaterialfv(GL_FRONT, GL_SPECULAR, material_specular);
+
+    //GLfloat material_shininess[] = { 45.0f };
+	//GLfloat material_shininess[] = { 60.0f };
+    //glMaterialfv(GL_FRONT, GL_SHININESS, material_shininess);
 
 	glClearColor(0.3, 0.3, 1.0, 0.0);
+    glShadeModel(GL_SMOOTH);
 
 	//glViewport(0, 0, width, height);
 	glMatrixMode(GL_PROJECTION);
