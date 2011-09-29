@@ -15,20 +15,20 @@ using namespace std;
 
 class RzVector {
 public:
-	RzVector();
-	RzVector(int);
-	RzVector(const RzVector&);
-	virtual ~RzVector();
+    RzVector();
+    RzVector(int);
+    RzVector(const RzVector&);
+    virtual ~RzVector();
 
-	void resize(int size_);
-	float *itemPointer(int index) const;
-	float itemValue(int index) const;
-	void setItemValue(int index, float value);
-	void freeMIfNULL();
-	string toString();
+    void resize(int size_);
+    float *itemPointer(int index) const;
+    float itemValue(int index) const;
+    void setItemValue(int index, float value);
+    void freeMIfNULL();
+    string toString();
 
-	int size;
-	float *M;
+    int size;
+    float *M;
 };
 
 #endif /* RZVECTOR_H_ */

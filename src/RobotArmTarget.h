@@ -12,11 +12,11 @@
 
 class RobotArmTarget {
 public:
-	RobotArmTarget();
-	virtual ~RobotArmTarget();
+    RobotArmTarget();
+    virtual ~RobotArmTarget();
 
-	POINT3D position;
-	float size;
+    POINT3D position;
+    float size;
 };
 
 #endif /* ROBOTARMTARGET_H_ */

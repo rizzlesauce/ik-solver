@@ -6,17 +6,17 @@
 // Utils
 //
 class Utils {
-	public:
+    public:
 
-	static Utils& getInstance();
-	std::string itos(int);
-	std::string date(time_t);	
-	int stoi(std::string);
-	float stof(std::string);
-	std::string ftos(float);
+    static Utils& getInstance();
+    std::string itos(int);
+    std::string date(time_t);    
+    int stoi(std::string);
+    float stof(std::string);
+    std::string ftos(float);
 
-	private:
-	Utils();
-};	
+    private:
+    Utils();
+};    
 
 #endif

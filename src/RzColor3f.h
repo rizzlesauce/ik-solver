@@ -10,24 +10,24 @@
 
 class RzColor3f {
 public:
-	RzColor3f();
-	RzColor3f(const RzColor3f&);
-	virtual ~RzColor3f();
-	void deepCopy(const RzColor3f&);
+    RzColor3f();
+    RzColor3f(const RzColor3f&);
+    virtual ~RzColor3f();
+    void deepCopy(const RzColor3f&);
 
-	float getRed();
-	float getGreen();
-	float getBlue();
+    float getRed();
+    float getGreen();
+    float getBlue();
 
-	unsigned int getScaledRed();
-	unsigned int getScaledGreen();
-	unsigned int getScaledBlue();
+    unsigned int getScaledRed();
+    unsigned int getScaledGreen();
+    unsigned int getScaledBlue();
 
-	void setRed(float r);
-	void setGreen(float g);
-	void setBlue(float b);
+    void setRed(float r);
+    void setGreen(float g);
+    void setBlue(float b);
 
-	float components[3];
+    float components[3];
 };
 
 #endif /* RZCOLOR3F_H_ */

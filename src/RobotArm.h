@@ -14,23 +14,23 @@
 
 class RobotArm {
 public:
-	RobotArm(float, float, RobotArm *p_nextSegment = NULL);
-	virtual ~RobotArm();
+    RobotArm(float, float, RobotArm *p_nextSegment = NULL);
+    virtual ~RobotArm();
 
-	RobotArm *getNextArm();
-	void setNextArm(RobotArm *arm);
-	void insertNextArm(RobotArm *arm);
-	bool hasNextArm();
-	void calculateEndPoint(VECTOR3D *beginPoint, float last_rotation);
-	void removeNextSegment();
+    RobotArm *getNextArm();
+    void setNextArm(RobotArm *arm);
+    void insertNextArm(RobotArm *arm);
+    bool hasNextArm();
+    void calculateEndPoint(VECTOR3D *beginPoint, float last_rotation);
+    void removeNextSegment();
 
-	float rotation;
-	float length;
+    float rotation;
+    float length;
 
-	POINT3D endPoint;
+    POINT3D endPoint;
 
 protected:
-	RobotArm *nextArm;
+    RobotArm *nextArm;
 
 };
 

@@ -13,10 +13,10 @@
 
 class CS455FileParser {
 public:
-	CS455FileParser();
-	virtual ~CS455FileParser();
+    CS455FileParser();
+    virtual ~CS455FileParser();
 
-	RzPolygonGroupCollection *parseFile(const std::string fileName);
+    RzPolygonGroupCollection *parseFile(const std::string fileName);
 };
 
 #endif /* CS455FILEPARSER_H_ */

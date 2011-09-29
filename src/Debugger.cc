@@ -33,14 +33,14 @@ void
 Debugger::print(string message) {
     if (enabled_) {
         cout << message << endl;
-		fflush(stdout);
+        fflush(stdout);
 
-		//logger.log(message);
+        //logger.log(message);
     }
 }
 
 void
 Debugger::throwMessage(string message) {
-	this->print(message);
-	throw message;
+    this->print(message);
+    throw message;
 }

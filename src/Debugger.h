@@ -18,7 +18,7 @@ class Debugger {
     bool isEnabled();
     void setEnabled(bool = true);
     void print(std::string);
-	void throwMessage(std::string);
+    void throwMessage(std::string);
 
     private:
     Debugger();

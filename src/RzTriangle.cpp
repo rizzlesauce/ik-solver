@@ -8,20 +8,20 @@
 #include "RzTriangle.h"
 
 RzTriangle::RzTriangle() {
-	// TODO Auto-generated constructor stub
+    // TODO Auto-generated constructor stub
 
 }
 
 RzTriangle::RzTriangle(const RzTriangle& other) {
-	deepCopy(other);
+    deepCopy(other);
 }
 
 RzTriangle::~RzTriangle() {
-	// TODO Auto-generated destructor stub
+    // TODO Auto-generated destructor stub
 }
 
 void RzTriangle::deepCopy(const RzTriangle& other) {
-	for (int i = 0; i < 3; ++i) {
-		vertices[i].deepCopy(other.vertices[i]);
-	}
+    for (int i = 0; i < 3; ++i) {
+        vertices[i].deepCopy(other.vertices[i]);
+    }
 }

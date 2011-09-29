@@ -12,32 +12,32 @@
 
 class RzVertex3f {
 public:
-	RzVertex3f();
-	RzVertex3f(const RzVertex3f&);
-	virtual ~RzVertex3f();
+    RzVertex3f();
+    RzVertex3f(const RzVertex3f&);
+    virtual ~RzVertex3f();
 
-	float getX() const;
-	float getY() const;
-	float getZ() const;
+    float getX() const;
+    float getY() const;
+    float getZ() const;
 
-	float getOrthoX() const;
-	float getOrthoY() const;
-	float getOrthoZ() const;
+    float getOrthoX() const;
+    float getOrthoY() const;
+    float getOrthoZ() const;
 
-	void setX(float);
-	void setY(float);
-	void setZ(float);
+    void setX(float);
+    void setY(float);
+    void setZ(float);
 
-	void setOrthoX(float);
-	void setOrthoY(float);
-	void setOrthoZ(float);
+    void setOrthoX(float);
+    void setOrthoY(float);
+    void setOrthoZ(float);
 
 
-	void deepCopy(const RzVertex3f&);
-	std::string toString() const;
+    void deepCopy(const RzVertex3f&);
+    std::string toString() const;
 
-	float coordinates[6];
-	float screen_x, screen_y;
+    float coordinates[6];
+    float screen_x, screen_y;
 };
 
 #endif /* RZVERTEX3F_H_ */

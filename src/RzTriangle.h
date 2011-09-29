@@ -12,12 +12,12 @@
 
 class RzTriangle {
 public:
-	RzTriangle();
-	RzTriangle(const RzTriangle&);
-	virtual ~RzTriangle();
-	void deepCopy(const RzTriangle& other);
+    RzTriangle();
+    RzTriangle(const RzTriangle&);
+    virtual ~RzTriangle();
+    void deepCopy(const RzTriangle& other);
 
-	RzVertex3f vertices[3];
+    RzVertex3f vertices[3];
 };
 
 #endif /* RZTRIANGLE_H_ */
